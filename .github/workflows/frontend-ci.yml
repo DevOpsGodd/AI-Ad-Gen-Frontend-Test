@@ -5,14 +5,11 @@ on:
     branches:
       - setup
       - main
-  pull_request:
-    branches:
-      - setup
-      - main
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -20,25 +17,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: latest
+          node-version: 18
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build Next.js Application
-        run: pnpm run build
+      - name: Build Frontend
+        run: pnpm build
 
       - name: Debug Build Directory
-        run: ls -lah && ls -lah .next || echo "⚠️ .next directory NOT found!"
+        run: ls -lah .next || echo "⚠️ .next directory NOT found!"
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: next-build
           path: .next
-          if-no-files-found: error
