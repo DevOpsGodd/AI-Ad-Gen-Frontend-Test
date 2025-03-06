@@ -1,0 +1,77 @@
+name: Frontend Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install TypeScript (if not installed)
+        run: pnpm add -D typescript
+
+#      - name: TypeScript Type Check
+#        run: pnpm tsc --noEmit
+
+#      - name: Lint Code
+#       run: pnpm run lint
+#
+#      - name: Run Tests
+#        run: pnpm test
+#
+      - name: Build Next.js Application
+        run: pnpm run build
+
+      - name: Deploy to Production Server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_KEY: ${{ secrets.SERVER_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SERVER_KEY" > ~/.ssh/deploy_key.pem
+          chmod 600 ~/.ssh/deploy_key.pem
+          
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key.pem "$SERVER_USER@$SERVER_IP" << EOF
+            # Update package list & install required dependencies
+            sudo apt update && sudo apt install -y git curl nodejs npm
+            
+            # Install pnpm if not already installed
+            if ! command -v pnpm &> /dev/null; then
+              npm install -g pnpm
+            fi
+            
+            # Install PM2 globally if not already installed
+            if ! command -v pm2 &> /dev/null; then
+              npm install -g pm2
+            fi
+
+            # Clone repo if it doesn't exist
+            if [ ! -d "/AI-Ad-Gen-Frontend-Test" ]; then
+              git clone https://github.com/DevOpsGodd/AI-Ad-Gen-Frontend-Test.git /AI-Ad-Gen-Frontend-Test
+            fi
+
+            cd /AI-Ad-Gen-Frontend-Test
+            git pull origin main
+            pnpm install
+            pnpm run build
+            pm2 restart ai-adgen-frontend || pm2 start pnpm --name "ai-adgen-frontend" -- start
+          EOF
+
