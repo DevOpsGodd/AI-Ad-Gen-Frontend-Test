@@ -33,7 +33,7 @@ jobs:
       - name: Find .next Directory
         id: find-next-dir
         run: |
-          NEXT_DIR=$(find $GITHUB_WORKSPACE -type d -name ".next" | head -n 1)
+          NEXT_DIR=$(find "$GITHUB_WORKSPACE" -type d -name ".next" | head -n 1)
           if [ -z "$NEXT_DIR" ]; then
             echo "❌ .next directory NOT found!"
             exit 1
@@ -42,11 +42,12 @@ jobs:
           echo "NEXT_PATH=$NEXT_DIR" >> $GITHUB_ENV
 
       - name: Debug .next Location
-        run: ls -lah $NEXT_PATH
+        run: ls -lah "${{ env.NEXT_PATH }}"
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: next-build
-          path: ${{ env.NEXT_PATH }}
+          path: "${{ env.NEXT_PATH }}/*"
           if-no-files-found: error
+          include-hidden-files: true
