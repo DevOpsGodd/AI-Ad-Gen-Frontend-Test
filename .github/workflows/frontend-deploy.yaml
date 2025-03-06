@@ -55,17 +55,17 @@ jobs:
             
             # Install pnpm if not already installed
             if ! command -v pnpm &> /dev/null; then
-              npm install -g pnpm
+              sudo npm install -g pnpm -y
             fi
             
             # Install PM2 globally if not already installed
             if ! command -v pm2 &> /dev/null; then
-              npm install -g pm2
+              sudo npm install -g pm2 -y
             fi
 
             # Clone repo if it doesn't exist
             if [ ! -d "/AI-Ad-Gen-Frontend-Test" ]; then
-              git clone https://github.com/DevOpsGodd/AI-Ad-Gen-Frontend-Test.git /AI-Ad-Gen-Frontend-Test
+              git clone https://github.com/DevOpsGodd/AI-Ad-Gen-Frontend-Test.git
             fi
 
             cd /AI-Ad-Gen-Frontend-Test
