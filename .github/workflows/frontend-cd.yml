@@ -19,7 +19,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: next-build
-          path: next-build
+          path: .next
 
       - name: Debug Downloaded Files
         run: ls -lah next-build || echo "⚠️ next-build directory NOT found after download!"
@@ -33,11 +33,10 @@ jobs:
 
       - name: Deploy to Production Server
         run: |
-          scp -i ~/.ssh/deploy_key.pem -r next-build package.json pnpm-lock.yaml "$SERVER_USER@$SERVER_IP:/home/$SERVER_USER/AI-Ad-Gen-Frontend-Test"
+          scp -i ~/.ssh/deploy_key.pem -r .next package.json pnpm-lock.yaml "$SERVER_USER@$SERVER_IP:/home/$SERVER_USER/AI-Ad-Gen-Frontend-Test"
 
           ssh -i ~/.ssh/deploy_key.pem "$SERVER_USER@$SERVER_IP" << EOF
             cd /home/$SERVER_USER/AI-Ad-Gen-Frontend-Test
-            mv next-build .next  
             pnpm install --frozen-lockfile
             pm2 delete ai-adgen-frontend || true
             pm2 start pnpm --name ai-adgen-frontend -- start
