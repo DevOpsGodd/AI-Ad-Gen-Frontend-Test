@@ -70,7 +70,6 @@ jobs:
 
             cd AI-Ad-Gen-Frontend-Test || { echo "Failed to enter directory"; exit 1; }
             git pull origin setup
-            pnpm install
             pnpm run build
             pm2 restart ai-adgen-frontend || pm2 start pnpm --name "ai-adgen-frontend" -- start
           EOF
