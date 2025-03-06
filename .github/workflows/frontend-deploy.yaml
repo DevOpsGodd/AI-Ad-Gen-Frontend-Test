@@ -27,19 +27,10 @@ jobs:
       - name: Install TypeScript (if not installed)
         run: pnpm add -D typescript
 
-#      - name: TypeScript Type Check
-#        run: pnpm tsc --noEmit
-
-#      - name: Lint Code
-#       run: pnpm run lint
-#
-#      - name: Run Tests
-#        run: pnpm test
-#
       - name: Build Next.js Application
         run: pnpm run build
 
-      - name: Deploy to Production Server
+      - name: Transfer Files to Server
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
@@ -48,29 +39,19 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SERVER_KEY" > ~/.ssh/deploy_key.pem
           chmod 600 ~/.ssh/deploy_key.pem
-          
+
+          # Transfer build files to server
+          rsync -avz --exclude="node_modules" --exclude=".git" --delete .next package.json pnpm-lock.yaml "$SERVER_USER@$SERVER_IP:/home/$SERVER_USER/AI-Ad-Gen-Frontend-Test"
+
+      - name: Deploy on Server
+        run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key.pem "$SERVER_USER@$SERVER_IP" << EOF
-            # Update package list & install required dependencies
-            sudo apt update && sudo apt install -y git curl nodejs npm
-            
-            # Install pnpm if not already installed
-            if ! command -v pnpm &> /dev/null; then
-              sudo npm install -g pnpm -y
-            fi
-            
-            # Install PM2 globally if not already installed
-            if ! command -v pm2 &> /dev/null; then
-              sudo npm install -g pm2 -y
-            fi
+            cd /home/$SERVER_USER/AI-Ad-Gen-Frontend-Test
 
-            # Clone repo if it doesn't exist
-            if [ ! -d "/AI-Ad-Gen-Frontend-Test" ]; then
-              git clone https://github.com/DevOpsGodd/AI-Ad-Gen-Frontend-Test.git
-            fi
+            # Install dependencies
+            pnpm install --frozen-lockfile
 
-            cd AI-Ad-Gen-Frontend-Test || { echo "Failed to enter directory"; exit 1; }
-            git pull origin setup
-            pnpm run build
-            pm2 start 
+            # Restart the application with PM2
+            pm2 delete ai-adgen-frontend || true
+            pm2 start pnpm --name ai-adgen-frontend -- start
           EOF
-
