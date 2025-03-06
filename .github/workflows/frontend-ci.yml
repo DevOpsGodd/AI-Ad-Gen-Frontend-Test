@@ -27,14 +27,14 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      # - name: Run Tests
+      # run: pnpm test
+
       - name: Build Frontend
         run: pnpm build
 
       - name: Debug Build Directory
         run: ls -lah .next || echo "⚠️ .next directory NOT found!"
-
-      - name: Move .next to workspace
-        run: mv .next $GITHUB_WORKSPACE/next-build
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4

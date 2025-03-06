@@ -22,7 +22,9 @@ jobs:
           path: .next
 
       - name: Debug Downloaded Files
-        run: ls -lah next-build || echo "⚠️ next-build directory NOT found after download!"
+        run: |
+          echo "📂 Checking downloaded .next build files..."
+          ls -lah .next || echo "⚠️ .next directory NOT found after download!"
 
       - name: Setup SSH
         run: |
@@ -33,10 +35,12 @@ jobs:
 
       - name: Deploy to Production Server
         run: |
-          scp -i ~/.ssh/deploy_key.pem -r .next package.json pnpm-lock.yaml "$SERVER_USER@$SERVER_IP:/home/$SERVER_USER/AI-Ad-Gen-Frontend-Test"
+          echo "🚀 Deploying .next build to server..."
+          scp -i ~/.ssh/deploy_key.pem -r .next package.json pnpm-lock.yaml "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/AI-Ad-Gen-Frontend-Test"
 
-          ssh -i ~/.ssh/deploy_key.pem "$SERVER_USER@$SERVER_IP" << EOF
-            cd /home/$SERVER_USER/AI-Ad-Gen-Frontend-Test
+          ssh -i ~/.ssh/deploy_key.pem "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}" << 'EOF'
+            set -e  # Stop script on error
+            cd /home/${{ secrets.SERVER_USER }}/AI-Ad-Gen-Frontend-Test
             pnpm install --frozen-lockfile
             pm2 delete ai-adgen-frontend || true
             pm2 start pnpm --name ai-adgen-frontend -- start
