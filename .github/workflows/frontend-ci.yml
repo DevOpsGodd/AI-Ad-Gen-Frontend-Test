@@ -1,4 +1,4 @@
-name: Frontend CI
+name: Frontend Test
 
 on:
   push:
@@ -31,22 +31,25 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # - name: Install TypeScript (if missing)
-      #   run: pnpm add -D typescript
+      # run: pnpm add -D typescript
 
       # - name: TypeScript Type Check
-      #   run: pnpm tsc --noEmit
+      # run: pnpm tsc --noEmit
 
       # - name: Lint Code
-      #   run: pnpm run lint
+      # run: pnpm run lint
 
       # - name: Run Tests
-      #   run: pnpm test
+      # run: pnpm test
 
       - name: Build Next.js Application
         run: pnpm run build
 
       - name: Debug Build Directory
-        run: ls -lah .next || echo "⚠️ .next directory NOT found!"
+        run: ls -lah && ls -lah .next || echo "⚠️ .next directory NOT found!"
+
+      - name: Debug Build Output
+        run: cat .next/build-manifest.json || echo "⚠️ No build manifest found!"
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
