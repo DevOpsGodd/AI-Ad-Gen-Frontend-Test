@@ -1,0 +1,39 @@
+name: Frontend Deploy
+
+on:
+  push:
+    branches:
+      - setup
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test-and-build]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key.pem
+          chmod 600 ~/.ssh/deploy_key.pem
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Production Server
+        run: |
+          scp -r .next package.json pnpm-lock.yaml "$SERVER_USER@$SERVER_IP:/home/$SERVER_USER/AI-Ad-Gen-Frontend-Test"
+
+          ssh -i ~/.ssh/deploy_key.pem "$SERVER_USER@$SERVER_IP" << EOF
+            cd /home/$SERVER_USER/AI-Ad-Gen-Frontend-Test
+            pnpm install --frozen-lockfile
+            pm2 delete ai-adgen-frontend || true
+            pm2 start pnpm --name ai-adgen-frontend -- start
+          EOF
