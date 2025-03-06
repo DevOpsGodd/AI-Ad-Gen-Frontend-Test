@@ -46,5 +46,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: next-build
-          path: .next
+          path: AI-Ad-Gen-Frontend-Test/.next
           retention-days: 1 # Keep for 1 day to be used by CD
