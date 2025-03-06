@@ -1,4 +1,4 @@
-name: Frontend Test
+name: Frontend Build
 
 on:
   push:
@@ -27,17 +27,26 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      # - name: Run Tests
-      # run: pnpm test
-
       - name: Build Frontend
         run: pnpm build
 
-      - name: Debug Build Directory
-        run: ls -lah .next || echo "⚠️ .next directory NOT found!"
+      - name: Find .next Directory
+        id: find-next-dir
+        run: |
+          NEXT_DIR=$(find $GITHUB_WORKSPACE -type d -name ".next" | head -n 1)
+          if [ -z "$NEXT_DIR" ]; then
+            echo "❌ .next directory NOT found!"
+            exit 1
+          fi
+          echo "✅ .next directory found at: $NEXT_DIR"
+          echo "NEXT_PATH=$NEXT_DIR" >> $GITHUB_ENV
+
+      - name: Debug .next Location
+        run: ls -lah $NEXT_PATH
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: next-build
-          path: .next
+          path: ${{ env.NEXT_PATH }}
+          if-no-files-found: error
